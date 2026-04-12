@@ -51,8 +51,8 @@ app.use('/api/files', filesRouter);
 app.get('/api/health', (req, res) => res.status(200).json({ status: 'ok' }));
 
 app.use((err, req, res, next) => {
-  console.error(err);
-  return res.status(500).json({ error: 'Internal server error' });
+  console.error('[ERROR]', err?.message || err, err?.stack);
+  return res.status(500).json({ error: 'Internal server error', detail: err?.message });
 });
 
 export default app;
