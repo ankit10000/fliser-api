@@ -47,7 +47,9 @@ router.post('/login', async (req, res) => {
   const user = await User.findOne({ email });
   if (!user) return res.status(401).json({ error: 'Invalid email or password' });
 
-  const isMatch = await bcrypt.compare(password, user.passwordHash);
+  if (!user.passwordHash) return res.status(401).json({ error: 'Invalid email or password' });
+  let isMatch = false;
+  try { isMatch = await bcrypt.compare(password, user.passwordHash); } catch { return res.status(401).json({ error: 'Invalid email or password' }); }
   if (!isMatch) return res.status(401).json({ error: 'Invalid email or password' });
 
   let profileExtra = {};
