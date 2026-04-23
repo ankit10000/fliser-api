@@ -50,8 +50,14 @@ app.use('/api/files', filesRouter);
 
 app.get('/api/health', (req, res) => res.status(200).json({ status: 'ok' }));
 
+app.use((req, res) => {
+  return res.status(404).json({ error: 'Route not found', method: req.method, path: req.originalUrl });
+});
+
 app.use((err, req, res, next) => {
   console.error('[ERROR]', err?.message || err, err?.stack);
+  if (err?.type === 'entity.parse.failed')
+    return res.status(400).json({ error: 'Invalid JSON body' });
   return res.status(500).json({ error: 'Internal server error' });
 });
 
