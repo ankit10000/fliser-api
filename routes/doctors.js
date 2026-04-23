@@ -101,6 +101,27 @@ router.get('/:id/slots', requireAuth, async (req, res) => {
   return res.status(200).json({ date, doctorId: req.params.id, availableSlots: allSlots.filter((s) => !bookedSlots.includes(s)), bookedSlots });
 });
 
+// POST /api/doctors/:id/rate
+router.post('/:id/rate', requireAuth, async (req, res) => {
+  if (req.user.role !== 'patient') return res.status(403).json({ error: 'Only patients can rate doctors' });
+  const { rating } = req.body;
+  const num = parseFloat(rating);
+  if (!num || num < 1 || num > 5) return res.status(400).json({ error: 'rating must be between 1 and 5' });
+
+  const appointment = await Appointment.findOne({ patientId: req.user.id, doctorId: req.params.id, status: 'completed' });
+  if (!appointment) return res.status(403).json({ error: 'You can only rate a doctor after a completed appointment' });
+
+  const doc = await Doctor.findOne({ userId: req.params.id });
+  if (!doc) return res.status(404).json({ error: 'Doctor not found' });
+
+  doc.ratingSum = (doc.ratingSum || 0) + num;
+  doc.totalRatings = (doc.totalRatings || 0) + 1;
+  doc.rating = +( doc.ratingSum / doc.totalRatings).toFixed(1);
+  await doc.save();
+
+  return res.status(200).json({ rating: doc.rating, totalRatings: doc.totalRatings });
+});
+
 // PUT /api/doctors/:id/availability
 router.put('/:id/availability', requireDoctor, async (req, res) => {
   if (req.user.id !== req.params.id) return res.status(403).json({ error: 'Can only update own availability' });

@@ -25,7 +25,7 @@ router.post('/', requireAuth, async (req, res) => {
   if (!title || !category) return res.status(400).json({ error: 'title and category required' });
   const record = await HealthRecord.create({
     patientId: targetId,
-    doctorId: req.user.role === 'doctor' ? req.user.id : null,
+    uploadedBy: req.user.id,
     title,
     category,
     description: description || '',
